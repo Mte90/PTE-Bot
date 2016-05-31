@@ -123,6 +123,22 @@ class Pte_Bot {
    * @return string       Form html
    */
   public function wds_do_frontend_form_submission_shortcode( $atts = array() ) {
+    // Initiate our output variable
+    $output = '';
+
+    if ( isset( $_GET[ 'id' ] ) && is_numeric( $_GET[ 'id' ] ) && isset( $_GET[ 'email' ] ) && !empty( $_GET[ 'email' ] ) ) {
+	$id = sanitize_text_field( $_GET[ 'id' ] );
+	$email = sanitize_email( $_GET[ 'email' ] );
+	if ( isset( $_GET[ '_wpnonce' ] ) ) {
+	  $nonce = sanitize_text_field( $_GET[ '_wpnonce' ] );
+	  if ( get_post_status( $id ) ) {
+	    if ( $nonce === Pb_Cron::non_logged_nonce( 'ptebot-unsub-' . $email ) ) {
+		wp_delete_post( $id );
+		$output .= '<h3>' . __( 'You are unsubscribed from PTE Bot :-(', $this->get_plugin_slug() ) . '</h3>';
+	    }
+	  }
+	}
+    }
 
     // Get CMB2 metabox object
     $cmb = Pb_CMB::get_cmb2_form();
@@ -153,9 +169,6 @@ class Pte_Bot {
 	    ),
 	) );
     }
-
-    // Initiate our output variable
-    $output = '';
 
     // Get any submission errors
     if ( ( $error = $cmb->prop( 'submission_error' ) ) && is_wp_error( $error ) ) {

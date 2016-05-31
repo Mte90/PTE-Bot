@@ -69,7 +69,7 @@ class Pb_Cron {
 	if ( $query->have_posts() ) :
 	  while ( $query->have_posts() ): $query->the_post();
 	    $frequency = wp_get_post_terms( get_the_ID(), 'pte-frequency' );
-	    switch ( $frequency[0]->slug ) {
+	    switch ( $frequency[ 0 ]->slug ) {
 		case 1:
 		  if ( date( 'D', $timestamp ) === 'Mon' ) {
 		    $this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
@@ -107,7 +107,17 @@ class Pb_Cron {
     $text .= __( ', there is a plugin that require your attention to review the strings:' . "\n\n", $this->plugin_slug );
     $text .= str_replace( "\n", '', str_replace( "\t", '', $random_project[ 'text' ] ) ) . ' - ' . $link;
     $text .= __( "\n\n" . 'Cheers from your loveable PTE Bot' . "\n", $this->plugin_slug );
-    wp_mail( get_the_title(), __( 'PTE Bot for you', $this->plugin_slug ), $text );
+    $nonce = $this->non_logged_nonce( 'ptebot-unsub-' . $email );
+    $url = get_site_url() . '/?id=' . get_the_ID() . '&email=' . $email . '&_wpnonce=' . $nonce;
+    $text .= __( "\n" . 'To unsubscribe ' . $url . "\n", $this->plugin_slug );
+    $headers = array('From: PTE Bot <no-reply@mte90.net>');
+    wp_mail( get_the_title(), __( 'PTE Bot for you', $this->plugin_slug ), $text, $headers );
+  }
+
+  public static function non_logged_nonce( $action = -1 ) {
+    $i = wp_nonce_tick();
+
+    return substr( wp_hash( $i . '|' . $action . '|0|', 'nonce' ), -12, 10 );
   }
 
 }
