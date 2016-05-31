@@ -44,8 +44,7 @@ class Pb_CMB {
     $cmb->add_field( array(
 	  'name' => __( 'Email', $this->plugin_slug ),
 	  'id' => 'user_email',
-	  'type' => 'text_email',
-	  'default' => __( '@wordpress.org', $this->plugin_slug ),
+	  'type' => 'text_email'
     ) );
 
     $cmb->add_field( array(
@@ -60,6 +59,12 @@ class Pb_CMB {
 	  'id' => 'frequency',
 	  'taxonomy' => 'pte-frequency',
 	  'type' => 'taxonomy_select',
+    ) );
+
+    $cmb->add_field( array(
+	  'name' => '',
+	  'id' => 'author_email',
+	  'type' => 'text_email',
     ) );
   }
 
@@ -109,6 +114,11 @@ class Pb_CMB {
 	return $cmb->prop( 'submission_error', new WP_Error( 'security_fail', __( 'Security check failed.' ) ) );
     }
 
+    // Check email2 for spam
+    if ( !empty( $_POST[ 'author_email' ] ) ) {
+	return $cmb->prop( 'submission_error', new WP_Error( 'post_data_missing', __( 'Please enter your email address.' ) ) );
+    }
+
     // Check title submitted
     if ( empty( $_POST[ 'user_email' ] ) ) {
 	return $cmb->prop( 'submission_error', new WP_Error( 'post_data_missing', __( 'The email is mandatory!' ) ) );
@@ -117,11 +127,6 @@ class Pb_CMB {
     // And that the title is not the default title
     if ( $cmb->get_field( 'user_email' )->default() === $_POST[ 'user_email' ] ) {
 	return $cmb->prop( 'submission_error', new WP_Error( 'post_data_missing', __( 'This email already exist, contact the admin.' ) ) );
-    }
-
-    // And that the title is not the default title
-    if ( !strpos( $_POST[ 'user_email' ], '@wordpress.org' ) ) {
-	return $cmb->prop( 'submission_error', new WP_Error( 'post_data_missing', __( 'This email is not from WordPress.org!' ) ) );
     }
 
     /**

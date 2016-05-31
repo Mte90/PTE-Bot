@@ -164,13 +164,14 @@ class Pte_Bot {
     }
 
     // If the post was submitted successfully, notify the user.
-    if ( isset( $_GET[ 'new_user' ] ) && ( $post = get_post( absint( $_GET[ 'new_user' ] ) ) ) ) {
+    if ( isset( $_GET[ 'new_user' ] ) ) {
 	// Add notice of submission to our output
 	$output .= '<h3>' . __( 'Thank you! You are in the PTE Bot system now!' ) . '</h3>';
     }
 
     // Get our form
     $output .= cmb2_get_metabox_form( $cmb, 'fake-oject-id', array( 'save_button' => __( 'Submit Submission', $this->get_plugin_slug() ) ) );
+    $output .= '<style>.cmb2-id-author-email {display:none;}</style>';
 
     return $output;
   }

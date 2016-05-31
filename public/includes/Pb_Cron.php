@@ -33,10 +33,10 @@ class Pb_Cron {
 	  'cb' => array( $this, 'ptebot_sending' )
     );
 
-    //$cronplus = new CronPlus( $args );
-    //$cronplus->schedule_event();
+    $cronplus = new CronPlus( $args );
+    $cronplus->schedule_event();
 
-    add_action( 'wp_head', array( $this, 'ptebot_sending' ) );
+    //add_action( 'wp_head', array( $this, 'ptebot_sending' ) );
   }
 
   public function ptebot_sending() {
