@@ -110,7 +110,7 @@ class Pb_Cron {
     $nonce = $this->non_logged_nonce( 'ptebot-unsub-' . $email );
     $url = get_site_url() . '/?id=' . get_the_ID() . '&email=' . $email . '&_wpnonce=' . $nonce;
     $text .= __( "\n" . 'To unsubscribe ' . $url . "\n", $this->plugin_slug );
-    $headers = array('From: PTE Bot <no-reply@mte90.net>');
+    $headers = array('From: PTE Bot <no-reply@mte90.net>', 'MIME-Version: 1.0','Content-Type: text/plain; charset="UTF-8"');
     wp_mail( get_the_title(), __( 'PTE Bot for you', $this->plugin_slug ), $text, $headers );
   }
 
