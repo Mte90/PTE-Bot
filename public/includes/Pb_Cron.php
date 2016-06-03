@@ -35,11 +35,17 @@ class Pb_Cron {
 
     $cronplus = new CronPlus( $args );
     $cronplus->schedule_event();
-
-    //add_action( 'wp_head', array( $this, 'ptebot_sending' ) );
   }
 
   public function ptebot_sending() {
+    if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON && defined('WP_DEBUG') && !WP_DEBUG) {
+	$last_exec = get_option('ptebot_last_run');
+	if(date('d') !== $last_exec) {
+	  update_option('ptebot_last_run', date('d'));
+	} else {
+	  return '';
+	}
+    }
     $waiting = array();
     $countries = get_terms( 'pte-country', array(
 	  'hide_empty' => false,
@@ -51,43 +57,45 @@ class Pb_Cron {
     }
 
     foreach ( $waiting as $lang => $projects ) {
-	$args = array(
-	    'post_type' => 'pte',
-	    'update_post_meta_cache' => false,
-	    'posts_per_page' => -1,
-	    'no_found_rows' => true,
-	    'tax_query' => array(
-		  array(
-			'taxonomy' => 'pte-country',
-			'field' => 'slug',
-			'terms' => $lang,
-		  ),
-	    )
-	);
-	$timestamp = time();
-	$query = new WP_Query( $args );
-	if ( $query->have_posts() ) :
-	  while ( $query->have_posts() ): $query->the_post();
-	    $frequency = wp_get_post_terms( get_the_ID(), 'pte-frequency' );
-	    switch ( $frequency[ 0 ]->slug ) {
-		case 1:
-		  if ( date( 'D', $timestamp ) === 'Mon' ) {
-		    $this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
-		  }
-		  break;
-		case 2:
-		  if ( date( 'D', $timestamp ) === 'Tue' || date( 'D', $timestamp ) === 'Thu' ) {
-		    $this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
-		  }
-		  break;
-		case 3:
-		  if ( date( 'D', $timestamp ) === 'Mon' || date( 'D', $timestamp ) === 'Wed' || date( 'D', $timestamp ) === 'Fri' ) {
-		    $this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
-		  }
-		  break;
-	    }
-	  endwhile;
-	endif;
+	if ( count( $projects ) > 0 ) {
+	  $args = array(
+		'post_type' => 'pte',
+		'update_post_meta_cache' => false,
+		'posts_per_page' => -1,
+		'no_found_rows' => true,
+		'tax_query' => array(
+		    array(
+			  'taxonomy' => 'pte-country',
+			  'field' => 'slug',
+			  'terms' => $lang,
+		    ),
+		)
+	  );
+	  $timestamp = time();
+	  $query = new WP_Query( $args );
+	  if ( $query->have_posts() ) :
+	    while ( $query->have_posts() ): $query->the_post();
+		$frequency = wp_get_post_terms( get_the_ID(), 'pte-frequency' );
+		switch ( $frequency[ 0 ]->slug ) {
+		  case 1:
+		    if ( date( 'D', $timestamp ) === 'Mon' ) {
+			$this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
+		    }
+		    break;
+		  case 2:
+		    if ( date( 'D', $timestamp ) === 'Tue' || date( 'D', $timestamp ) === 'Thu' ) {
+			$this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
+		    }
+		    break;
+		  case 3:
+		    if ( date( 'D', $timestamp ) === 'Mon' || date( 'D', $timestamp ) === 'Wed' || date( 'D', $timestamp ) === 'Fri' ) {
+			$this->prepare_email( get_the_title(), $projects[ mt_rand( 0, count( $projects ) - 1 ) ] );
+		    }
+		    break;
+		}
+	    endwhile;
+	  endif;
+	}
     }
   }
 
@@ -110,7 +118,7 @@ class Pb_Cron {
     $nonce = $this->non_logged_nonce( 'ptebot-unsub-' . $email );
     $url = get_site_url() . '/?id=' . get_the_ID() . '&email=' . $email . '&_wpnonce=' . $nonce;
     $text .= __( "\n" . 'To unsubscribe ' . $url . "\n", $this->plugin_slug );
-    $headers = array('From: PTE Bot <no-reply@mte90.net>', 'MIME-Version: 1.0','Content-Type: text/plain; charset="UTF-8"');
+    $headers = array( 'From: PTE Bot <no-reply@mte90.net>', 'MIME-Version: 1.0', 'Content-Type: text/plain; charset="UTF-8"' );
     wp_mail( get_the_title(), __( 'PTE Bot for you', $this->plugin_slug ), $text, $headers );
   }
 
